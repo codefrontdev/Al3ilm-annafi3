@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/postgressDB");
 
 const User = sequelize.define(
-  "user",
+  "User",
   {
     id: {
       type: DataTypes.UUID,

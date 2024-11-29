@@ -1,10 +1,5 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/postgressDB");
-const User = require("./UserModel");
-const Video = require("./VideoModel");
-
-
-
 
 const Theme = sequelize.define(
   "Theme",
@@ -21,21 +16,9 @@ const Theme = sequelize.define(
   },
   {
     sequelize,
-    modelName: "User",
+    modelName: "Theme",
     timestamps: true,
   }
 );
-
-
- Theme.hasMany(Video, {
-      foreignKey: 'themeId',
-      as: 'videos',
-    });
-
-    Theme.hasMany(Video, {
-      foreignKey: 'queueThemeId',
-      as: 'videosQueue',
-    });
-  
 
 module.exports = Theme;

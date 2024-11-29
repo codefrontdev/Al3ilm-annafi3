@@ -6,17 +6,19 @@ const themeRoutes = require("./routes/themeRoute");
 const userRoutes = require("./routes/userRoute");
 const { connection } = require("./config/postgressDB");
 const globalErrorMiddleware = require("./middleware/ErrorMiddleware");
+const ApiError = require("./utils/ApiError");
 
 const app = express();
 app.use(express.json());
 
 connection();
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-// ربط المسارات
-// app.use("/api/auth", authRoutes);
+
+
+
+
+// routes
+
 app.use("/api/videos", videoRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/users", userRoutes);
@@ -30,7 +32,7 @@ app.use("*", (req, res, next) => {
 app.use(globalErrorMiddleware);
 
 // run listen
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log("listening on port 3000");
 });
 

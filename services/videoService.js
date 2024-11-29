@@ -1,4 +1,3 @@
-
 const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
 const Video = require("../models/VideoModel");
@@ -9,36 +8,148 @@ exports.createVideo = asyncHandler(async (req, res) => {
     const { title, videoUrl, uploaderId, themes, imageUrl, reference } =
       req.body;
 
-    if (!title || !videoUrl || !uploaderId || !themes) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+     const lastVideo = await Video.findOne({
+       where: { uploaderId },
+       order: [["createdAt", "DESC"]], // للحصول على آخر فيديو مضاف
+     });
 
-    // التحقق من صحة قائمة الثيمات
-    if (themes.length < 1 || themes.length > 3) {
-      return res
-        .status(400)
-        .json({ message: "Themes must be between 1 and 3" });
-    }
-
-    const video = await Video.create({
+     if (lastVideo && !lastVideo.isValid) {
+       return res.status(400).json({
+         message: "Cannot add a new video until the last one is validated.",
+       });
+     }
+    
+    // إنشاء فيديو جديد
+    const newVideo = await Video.create({
       title,
       videoUrl,
       uploaderId,
-      themes,
       imageUrl,
       reference,
     });
 
-    res.status(201).json(video);
+    // ربط الفيديو بالـ themes (افتراض أن themes هو مصفوفة من الـ IDs)
+    if (themes && themes.length > 0) {
+      await newVideo.setThemes(themes);
+    }
+
+    res.status(201).json({
+      message: "Video created successfully",
+      video: newVideo,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
+
+
+exports.validateVideo = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {status} = req.body;
+    const video = await Video.findByPk(id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    video.isValid = true;
+    video.status = status
+    await video.save();
+    res.status(200).json({ message: "Video validated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+})
+
+
 exports.getAllVideos = asyncHandler(async (req, res) => {
   try {
     const videos = await Video.findAll({
-      include: [{ model: Theme, as: "themes" }],
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+    res.status(200).json(videos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+exports.getVideosIsValidByTheme = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params; // id الخاص بالموضوع (theme)
+
+    const videos = await Video.findAll({
+      include: [
+        {
+          model: User,
+          as: "uploader",
+          attributes: ["id", "username"], // الحقول المطلوبة من User
+        },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"], // الحقول المطلوبة من Theme
+          through: { attributes: [] }, // لإخفاء بيانات الجدول الوسيط
+          where: { id }, // شرط لتصفية النتائج بناءً على معرف الموضوع
+        },
+      ],
+      where: { isValid: true }, // شرط أن يكون الفيديو صالحًا
+    });
+
+    res.status(200).json({
+      message: "Videos found successfully",
+      result: videos.length,
+      videos,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+exports.getVideosNotValidByTheme = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const videos = await Video.findAll({
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"],
+          through: { attributes: [] },
+          where: { id },
+        },
+      ],
+      where: { isValid: false },
+    });
+    res.status(200).json(videos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+exports.getVideosByUploader = asyncHandler(async (req, res) => {
+  console.log(req.params);
+  try {
+    const { id } = req.params;
+    const videos = await Video.findAll({
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"],
+          through: { attributes: [] },
+        },
+      ],
+      where: { uploaderId: id },
     });
     res.status(200).json(videos);
   } catch (error) {
@@ -49,7 +160,22 @@ exports.getAllVideos = asyncHandler(async (req, res) => {
 exports.getVideoById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const video = await Video.findByPk(id);
+    console.log(id);
+    const video = await Video.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "uploader",
+          attributes: ["id", "username"], // الحقول المطلوبة من User
+        },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"], // الحقول المطلوبة من Theme
+          through: { attributes: [] }, // لإخفاء الجدول الوسيط
+        },
+      ],
+    });
     if (!video) {
       return res.status(404).json({ message: "Video not found" });
     }
@@ -61,6 +187,7 @@ exports.getVideoById = asyncHandler(async (req, res) => {
 
 exports.updateVideo = asyncHandler(async (req, res) => {
   try {
+    console.log(req.body);
     const { id } = req.params;
     const video = await Video.findByPk(id);
     if (!video) {
@@ -88,25 +215,29 @@ exports.deleteVideo = asyncHandler(async (req, res) => {
 
 exports.getVideosByTheme = asyncHandler(async (req, res) => {
   try {
-    const { themeId } = req.params;
+    const { id } = req.params; // id الخاص بـ Theme
     const videos = await Video.findAll({
-      include: [{ model: Theme, as: "themes" }],
-      where: { themes: { id: themeId } },
+      include: [
+        {
+          model: User,
+          as: "uploader",
+          attributes: ["id", "username"], // الحقول المطلوبة فقط من User
+        },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name", "createdAt", "updatedAt"], // الحقول المطلوبة فقط من Theme
+          through: { attributes: [] }, // لإخفاء الجدول الوسيط
+          where: { id }, // الشرط هنا للبحث بناءً على معرف Theme
+        },
+      ],
     });
-    res.status(200).json(videos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
 
-exports.getVideosByUploader = asyncHandler(async (req, res) => {
-  try {
-    const { uploaderId } = req.params;
-    const videos = await Video.findAll({
-      include: [{ model: User, as: "uploader" }],
-      where: { uploaderId },
+    res.status(200).json({
+      message: "Videos found successfully",
+      result: videos.length,
+      videos,
     });
-    res.status(200).json(videos);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

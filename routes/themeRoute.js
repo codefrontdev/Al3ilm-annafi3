@@ -1,24 +1,27 @@
-
-const express = require('express');
-const { getThemes, createTheme, getTheme, updateTheme, deleteTheme } = require('../services/themeService');
+const express = require("express");
+const {
+  getThemes,
+  createTheme,
+  getTheme,
+  updateTheme,
+  deleteTheme,
+} = require("../services/themeService");
+const {
+  createThemeValidator,
+  getOneThemeValidator,
+  updateThemeValidator,
+  deleteThemeValidator,
+} = require("../utils/validator/themeValidator");
 const router = express.Router();
 
+router.get("/", getThemes);
 
-router.get('/', getThemes)
+router.post("/", createThemeValidator, createTheme);
 
-router.post('/', createTheme)
+router.get("/:id", getOneThemeValidator, getTheme);
 
-router.get('/:id', getTheme)
+router.put("/:id", updateThemeValidator, updateTheme);
 
-router.put('/:id', updateTheme)
-
-router.delete('/:id', deleteTheme)
-
-
+router.delete("/:id", deleteThemeValidator, deleteTheme);
 
 module.exports = router;
-
-
-
-
-
