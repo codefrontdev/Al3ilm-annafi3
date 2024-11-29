@@ -26,7 +26,17 @@ app.use(
   })
 );
 
+
+app.get('/', (req, res) => {
+  res.json({
+    status: "success",
+    action: "Server is running",
+    message: "Hello, world",
+  });
+});
 // routes
+
+
 
 app.use("/api/videos", videoRoutes);
 app.use("/api/themes", themeRoutes);
