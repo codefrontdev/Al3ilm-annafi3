@@ -3,22 +3,26 @@ const asyncHandler = require("express-async-handler");
 const Video = require("../models/VideoModel");
 const Theme = require("../models/ThemeModel");
 
+
+
+
 exports.createVideo = asyncHandler(async (req, res) => {
   try {
     const { title, videoUrl, uploaderId, themes, imageUrl, reference } =
       req.body;
 
-     const lastVideo = await Video.findOne({
-       where: { uploaderId },
-       order: [["createdAt", "DESC"]], // للحصول على آخر فيديو مضاف
-     });
+    // التحقق من آخر فيديو للمستخدم
+    const lastVideo = await Video.findOne({
+      where: { uploaderId },
+      order: [["createdAt", "DESC"]], // للحصول على أحدث فيديو
+    });
 
-     if (lastVideo && !lastVideo.isValid) {
-       return res.status(400).json({
-         message: "Cannot add a new video until the last one is validated.",
-       });
-     }
-    
+    if (lastVideo && !lastVideo.isValid) {
+      return res.status(400).json({
+        message: "Cannot add a new video until the last one is validated.",
+      });
+    }
+
     // إنشاء فيديو جديد
     const newVideo = await Video.create({
       title,
@@ -28,19 +32,28 @@ exports.createVideo = asyncHandler(async (req, res) => {
       reference,
     });
 
-    // ربط الفيديو بالـ themes (افتراض أن themes هو مصفوفة من الـ IDs)
-    if (themes && themes.length > 0) {
-      await newVideo.setThemes(themes);
+    // ربط الفيديو بالـ themes (افتراض أن themes هو مصفوفة من IDs)
+    if (themes && Array.isArray(themes) && themes.length > 0) {
+      await newVideo.setThemes(themes); // ضبط العلاقة
     }
+
+    // جلب الفيديو مع العلاقات المرتبطة لتضمينها في الاستجابة
+    const videoWithRelations = await Video.findByPk(newVideo.id, {
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        { model: Theme, as: "themes", attributes: ["id", "name"] },
+      ],
+    });
 
     res.status(201).json({
       message: "Video created successfully",
-      video: newVideo,
+      video: videoWithRelations,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 
@@ -157,6 +170,138 @@ exports.getVideosByUploader = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+exports.addThemesToVideo = asyncHandler(async (req, res) => {
+  try {
+    const { videoId, themes } = req.body;
+
+    // التحقق من أن المواضيع مصفوفة ولا تتجاوز 3 عناصر
+    if (!Array.isArray(themes) || themes.length > 3) {
+      return res.status(400).json({
+        message: "A video can have up to 3 themes only.",
+      });
+    }
+
+    // التحقق من وجود الفيديو
+    const video = await Video.findByPk(videoId);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    // التحقق من المواضيع المرتبطة حاليًا
+    const currentThemes = await video.getThemes();
+    if (currentThemes.length + themes.length > 3) {
+      return res.status(400).json({
+        message: `Adding these themes will exceed the maximum of 3 themes per video. Current themes: ${currentThemes.length}.`,
+      });
+    }
+
+    // إضافة المواضيع الجديدة
+    await video.addThemes(themes);
+
+    // استرجاع الفيديو مع المواضيع
+    const updatedVideo = await Video.findByPk(videoId, {
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      message: "Themes added successfully",
+      video: updatedVideo,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+exports.updateThemesForVideo = asyncHandler(async (req, res) => {
+  try {
+    const { videoId, themes } = req.body;
+
+    // التحقق من أن المواضيع مصفوفة ولا تتجاوز 3 عناصر
+    if (!Array.isArray(themes) || themes.length > 3) {
+      return res.status(400).json({
+        message: "A video can have up to 3 themes only.",
+      });
+    }
+
+    // التحقق من وجود الفيديو
+    const video = await Video.findByPk(videoId);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    // استبدال المواضيع الحالية بالمواضيع الجديدة
+    await video.setThemes(themes);
+
+    // استرجاع الفيديو مع المواضيع الجديدة
+    const updatedVideo = await Video.findByPk(videoId, {
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      message: "Themes updated successfully",
+      video: updatedVideo,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+exports.removeThemeFromVideo = asyncHandler(async (req, res) => {
+  try {
+    const { videoId, themeId } = req.body;
+
+    // التحقق من وجود الفيديو
+    const video = await Video.findByPk(videoId);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    // إزالة الموضوع المرتبط بالفيديو
+    await video.removeTheme(themeId);
+
+    // استرجاع الفيديو مع المواضيع المحدثة
+    const updatedVideo = await Video.findByPk(videoId, {
+      include: [
+       { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      message: "Theme removed successfully",
+      video: updatedVideo,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
 exports.getVideoById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -185,20 +330,49 @@ exports.getVideoById = asyncHandler(async (req, res) => {
   }
 });
 
+
+
 exports.updateVideo = asyncHandler(async (req, res) => {
   try {
-    console.log(req.body);
-    const { id } = req.params;
+    const { id } = req.params; // معرف الفيديو
+    const { themes, ...videoData } = req.body; // فصل المواضيع (themes) عن باقي البيانات
+
+    // التحقق من وجود الفيديو
     const video = await Video.findByPk(id);
     if (!video) {
       return res.status(404).json({ message: "Video not found" });
     }
-    await video.update(req.body);
-    res.status(200).json(video);
+
+    // تحديث بيانات الفيديو
+    await video.update(videoData);
+
+    // تحديث العلاقات المرتبطة مع المواضيع (themes)
+    if (themes && Array.isArray(themes)) {
+      await video.setThemes(themes); // تعيين المواضيع الجديدة
+    }
+
+    // جلب الفيديو بعد التحديث مع العلاقات المرتبطة
+    const updatedVideo = await Video.findByPk(id, {
+      include: [
+        { model: User, as: "uploader", attributes: ["id", "username"] },
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      message: "Video updated successfully",
+      video: updatedVideo,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 exports.deleteVideo = asyncHandler(async (req, res) => {
   try {

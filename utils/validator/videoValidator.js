@@ -1,4 +1,4 @@
-const { body, param, query } = require("express-validator");
+const { body, param, query, check } = require("express-validator");
 const validatorMiddleware = require("../../middleware/validatorMiddleware");
 
 exports.createVideoValidator = [
@@ -175,5 +175,44 @@ exports.deleteVideoValidator = [
     .withMessage("Video ID is required")
     .isUUID()
     .withMessage("Video ID must be a valid UUID"),
+  validatorMiddleware,
+];
+
+
+exports.addThemesValidator = [
+  check("videoId")
+    .notEmpty()
+    .withMessage("Video ID is required")
+    .isUUID()
+    .withMessage("Video ID must be a valid UUID"),
+  check("themes")
+    .isArray({ max: 3 })
+    .withMessage("Themes must be an array with a maximum of 3 items."),
+  validatorMiddleware,
+];
+
+exports.removeThemeValidator = [
+  check("videoId")
+    .notEmpty()
+    .withMessage("Video ID is required")
+    .isUUID()
+    .withMessage("Video ID must be a valid UUID"),
+  check("themeId")
+    .notEmpty()
+    .withMessage("Video ID is required")
+    .isUUID()
+    .withMessage("Video ID must be a valid UUID"),
+  validatorMiddleware,
+];
+
+exports.updateThemesValidator = [
+  check("videoId")
+    .notEmpty()
+    .withMessage("Video ID is required")
+    .isUUID()
+    .withMessage("Video ID must be a valid UUID"),
+  check("themes")
+    .isArray({ max: 3 })
+    .withMessage("Themes must be an array with a maximum of 3 items."),
   validatorMiddleware,
 ];

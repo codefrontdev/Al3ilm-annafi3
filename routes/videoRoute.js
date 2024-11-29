@@ -10,6 +10,9 @@ const {
   getVideosByUploader,
   getVideosByTheme,
   validateVideo,
+  addThemesToVideo,
+  removeThemeFromVideo,
+  updateThemesForVideo,
 } = require("../services/videoService");
 const {
   createVideoValidator,
@@ -21,8 +24,17 @@ const {
   getVideosNotValidValidator,
   getVideosByUploaderValidator,
   getVideosByThemeValidator,
+  addThemesValidator,
+  removeThemeValidator,
+  updateThemesValidator,
 } = require("../utils/validator/videoValidator");
 const router = express.Router();
+
+
+router.post("/themes", addThemesValidator, addThemesToVideo);
+router.delete("/themes", removeThemeValidator, removeThemeFromVideo);
+router.put("/themes", updateThemesValidator, updateThemesForVideo);
+
 
 router.get("/", getAllVideos);
 
@@ -41,6 +53,9 @@ router.get(
   getVideosNotValidValidator,
   getVideosNotValidByTheme
 );
+
+
+
 
 router.get("/uploader/:id", getVideosByUploaderValidator, getVideosByUploader);
 
