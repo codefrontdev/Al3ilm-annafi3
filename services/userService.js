@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
+
 const bcrpt = require("bcrypt");
+const User = require("../models/UserModel");
 
 exports.createUser = asyncHandler(async (req, res) => {
   try {
