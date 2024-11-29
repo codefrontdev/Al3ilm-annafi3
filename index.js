@@ -7,15 +7,24 @@ const userRoutes = require("./routes/userRoute");
 const { connection } = require("./config/postgressDB");
 const globalErrorMiddleware = require("./middleware/ErrorMiddleware");
 const ApiError = require("./utils/ApiError");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
 
 connection();
 
+// cors
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    optionsSuccessStatus: 200,
 
-
-
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
 // routes
 
