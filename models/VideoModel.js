@@ -4,7 +4,7 @@
 const { DataTypes } = require("sequelize");
 
 const {sequelize} = require("../config/postgressDB");
-const User = require("./userModel");
+const User = require("./UserModel");
 
 const Video = sequelize.define(
   "video",

@@ -1,5 +1,5 @@
 
-const User = require("../models/userModel");
+const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
 const Video = require("../models/VideoModel");
 const Theme = require("../models/ThemeModel");

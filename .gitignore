@@ -1,3 +1,4 @@
 node_modules
+config/postgressDB.js
 # Keep environment variables out of version control
 # .env
