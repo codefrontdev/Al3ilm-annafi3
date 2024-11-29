@@ -28,11 +28,17 @@ app.use(
 
 
 app.get('/', (req, res) => {
-  res.json({
-    status: "success",
-    action: "Server is running",
-    message: "Hello, world",
-  });
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Home</title>
+      </head>
+      <body>
+        <h1>Hello, World!</h1>
+      </body>
+    </html>
+  `);
 });
 // routes
 
