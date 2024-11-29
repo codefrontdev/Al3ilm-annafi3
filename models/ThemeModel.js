@@ -27,9 +27,15 @@ const Theme = sequelize.define(
 );
 
 
+ Theme.hasMany(Video, {
+      foreignKey: 'themeId',
+      as: 'videos',
+    });
 
-Theme.hasMany(Video, { foreignKey: "themeId" });
-
-Theme.belongsTo(User, { foreignKey: "uploaderId" });
+    Theme.hasMany(Video, {
+      foreignKey: 'queueThemeId',
+      as: 'videosQueue',
+    });
+  
 
 module.exports = Theme;
