@@ -149,7 +149,7 @@ exports.getVideosNotValidByTheme = asyncHandler(async (req, res) => {
 });
 
 exports.getVideosByUploader = asyncHandler(async (req, res) => {
-  console.log(req.params);
+  
   try {
     const { id } = req.params;
     const videos = await Video.findAll({
@@ -305,7 +305,7 @@ exports.removeThemeFromVideo = asyncHandler(async (req, res) => {
 exports.getVideoById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
+    
     const video = await Video.findByPk(id, {
       include: [
         {
@@ -386,6 +386,39 @@ exports.deleteVideo = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+exports.addLikes = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const video = await Video.findByPk(id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    video.likes += 1;
+    await video.save();
+    res.status(200).json({ message: "Likes added successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+exports.removeLikes = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const video = await Video.findByPk(id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    video.likes -= 1;
+    await video.save();
+    res.status(200).json({ message: "Likes removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 exports.getVideosByTheme = asyncHandler(async (req, res) => {
   try {

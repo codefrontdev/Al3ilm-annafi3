@@ -10,9 +10,7 @@ exports.createVideoValidator = [
 
   body("videoUrl")
     .notEmpty()
-    .withMessage("Video URL is required")
-    .isURL()
-    .withMessage("Video URL must be a valid URL"),
+    .withMessage("Video URL is required"),
 
   body("uploaderId")
     .notEmpty()
@@ -24,7 +22,7 @@ exports.createVideoValidator = [
     .isArray()
     .withMessage("Themes must be an array")
     .custom((value) => {
-      console.log(value);
+      
       if (value.length < 1 || value.length > 3) {
         throw new Error("Themes array must contain between 1 and 3 items");
       }
@@ -32,9 +30,7 @@ exports.createVideoValidator = [
     }),
 
   body("imageUrl")
-    .optional()
-    .isURL()
-    .withMessage("Image URL must be a valid URL"),
+    .optional(),
 
   body("reference")
     .optional()
@@ -58,16 +54,14 @@ exports.updateVideoValidator = [
     .withMessage("Title must be between 1 and 255 characters long"),
 
   body("videoUrl")
-    .optional()
-    .isURL()
-    .withMessage("Video URL must be a valid URL"),
+    .optional(),
 
   body("themes")
     .optional()
     .isArray()
     .withMessage("Themes must be an array")
     .custom((value) => {
-      console.log(value);
+      
       if (value.length < 1 || value.length > 3) {
         throw new Error("Themes array must contain between 1 and 3 items");
       }
@@ -75,9 +69,7 @@ exports.updateVideoValidator = [
     }),
 
   body("imageUrl")
-    .optional()
-    .isURL()
-    .withMessage("Image URL must be a valid URL"),
+    .optional(),
 
   body("reference")
     .optional()

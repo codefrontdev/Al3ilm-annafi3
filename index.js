@@ -1,5 +1,5 @@
-require("dotenv").config();
 const express = require("express");
+require("dotenv").config()
 // const authRoutes = require("./routes/authRoute");
 const videoRoutes = require("./routes/videoRoute");
 const themeRoutes = require("./routes/themeRoute");
@@ -8,6 +8,7 @@ const { connection } = require("./config/postgressDB");
 const globalErrorMiddleware = require("./middleware/ErrorMiddleware");
 const ApiError = require("./utils/ApiError");
 const cors = require("cors");
+
 
 const app = express();
 app.use(express.json());
@@ -58,7 +59,7 @@ app.use(globalErrorMiddleware);
 
 // run listen
 const server = app.listen(process.env.PORT || 3000, () => {
-  console.log("listening on port 3000");
+  console.log("listening on port " + process.env.PORT || 3000);
 });
 
 // Handle rejection outside express

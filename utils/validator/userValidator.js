@@ -36,9 +36,7 @@ exports.createUserValidator = [
     .withMessage("Password must be at least 6 characters long"),
 
   body("profilePic")
-    .optional()
-    .isURL()
-        .withMessage("Profile picture must be a valid URL"),
+    .optional(),
   validatorMiddleware
 ];
 
@@ -59,6 +57,29 @@ exports.updateUserValidator = [
     .withMessage('ID is required')
     .isUUID()
     .withMessage('ID must be a valid UUID'),
+
+    body('username')
+    .optional()
+    .isLength({ min: 3 })
+    .withMessage('Username must be at least 3 characters long'),
+
+    body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Invalid email format')
+    .normalizeEmail(),
+
+    body('password')
+    .optional()
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'), 
+    
+    body('profilePic')
+    .optional(),
+  body("isAdmin")
+    .optional()
+    .isBoolean()
+    .withMessage("isAdmin must be a boolean value"),
     validatorMiddleware
 ]
 

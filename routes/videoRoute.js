@@ -13,6 +13,8 @@ const {
   addThemesToVideo,
   removeThemeFromVideo,
   updateThemesForVideo,
+  addLikes,
+  removeLikes,
 } = require("../services/videoService");
 const {
   createVideoValidator,
@@ -34,6 +36,10 @@ const router = express.Router();
 router.post("/themes", addThemesValidator, addThemesToVideo);
 router.delete("/themes", removeThemeValidator, removeThemeFromVideo);
 router.put("/themes", updateThemesValidator, updateThemesForVideo);
+
+
+router.post("/:id/like", addLikes);
+router.delete("/:id/like", removeLikes);
 
 
 router.get("/", getAllVideos);

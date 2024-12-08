@@ -32,11 +32,7 @@ const Video = sequelize.define(
       defaultValue: 0,
     },
     imageUrl: DataTypes.STRING,
-    reference: {
-      type: DataTypes.ENUM,
-      values: ["Savant", "Imam", "Talibu Ilm"],
-      defaultValue: "Savant",
-    },
+    reference: DataTypes.STRING,
     status: {
       type: DataTypes.ENUM,
       values: ["approved", "rejected"],

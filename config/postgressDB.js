@@ -1,11 +1,28 @@
 const { Sequelize } = require("sequelize");
 
+const production = {
+  database: process.env.ONLINE_DB_DATABASE_NAME,
+  username: process.env.ONLINE_DB_USERNAME,
+  password: process.env.ONLINE_DB_PASSWORD,
+};
+
+const prodHost = process.env.ONLINE_DB_HOST;
+
+const devHost = process.env.DB_HOST;
+
+const development = {
+  database: process.env.DB_DATABASE_NAME,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+};
+
 const sequelize = new Sequelize(
-  process.env.DB_DATABASE_NAME,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
+  process.env.NODE_ENV === "production" ? production.database : development.database,
+  process.env.NODE_ENV === "production"? production.username : development.username,
+  process.env.NODE_ENV === "production"? production.password : development.password,
+
   {
-    host: process.env.DB_HOST,
+    host: process.env.NODE_ENV === "production" ? prodHost : devHost,
     // port: 5432,
     dialect: "postgres",
     logging: false,
